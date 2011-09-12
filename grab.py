@@ -1,6 +1,7 @@
 import datetime, urllib, re, os, sys, traceback
-current = datetime.date(2011,3,13)
-until = datetime.date(2011,6,5)
+current = datetime.date(2011,5,29)
+current = current + datetime.timedelta(7)1~
+until = datetime.date(2011,9,11)
 while current != until:
     try:
         # Download smil
@@ -17,7 +18,7 @@ while current != until:
         rtsp = re.findall("rtsp://.*", content)[0].rstrip('"')
         print "Grabbing NOVA for %s" % repr(current)
         # Mplayer Command
-        wavfile = "%s_%s_%s.wav" % (current.year, current.month, current.day)
+        wavfile = "%04_%02d_%02d.wav" % (current.year, current.month, current.day)
         mplayercmdtemplate = "mplayer %(rtsp)s -ao pcm:file=%(wavfile)s -vc null -vo null"
         mplayercmd = mplayercmdtemplate % {"wavfile": wavfile, "rtsp": rtsp}
         print mplayercmd
@@ -38,7 +39,7 @@ while current != until:
         traceback.print_exc()
         print "An error occurred processing %s" % mp3file
     finally:
-        current = current + datetime.timedelta(-7)
+        current = current + datetime.timedelta(7)
 
 """
 * To Do* 
