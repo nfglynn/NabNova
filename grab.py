@@ -1,6 +1,6 @@
 import datetime, urllib, re, os, sys, traceback
 current = datetime.date(2011,5,29)
-current = current + datetime.timedelta(7)1~
+current = current + datetime.timedelta(7)
 until = datetime.date(2011,9,11)
 while current != until:
     try:
