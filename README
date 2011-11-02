@@ -1,0 +1,10 @@
+[NabNova]
+I was sick of trying to stream realplayer copies of my favourite radio program so wrote this to pull them down, convert to mp3, ID3 tag them and make a podcast.
+
+[Dependencies]
+ - Python
+ - Mutagen: http://code.google.com/p/mutagen/
+ - PyRSS2Gen: http://www.dalkescientific.com/Python/PyRSS2Gen.html
+
+[To Do]
+ - Monitor for new episodes and download them automatically without manual reruns.
