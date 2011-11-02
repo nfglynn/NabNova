@@ -5,6 +5,8 @@ I was sick of trying to stream realplayer copies of my favourite radio program s
  - Python
  - Mutagen: http://code.google.com/p/mutagen/
  - PyRSS2Gen: http://www.dalkescientific.com/Python/PyRSS2Gen.html
+ - mplayer
+ - lame
 
 [To Do]
  - Monitor for new episodes and download them automatically without manual reruns.
