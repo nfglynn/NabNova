@@ -5,9 +5,9 @@ from mutagen.id3 import ID3, APIC, error
 import PyRSS2Gen
 
 PUBLISH_PATH = "/var/www/nova"
-current = datetime.date(2011,01,09)
+current = datetime.date(2011,1,9)
 
-while current <= datetime.today():
+while current <= datetime.date.today():
     try:
         # Download smil
         smiltemplate = "http://dynamic.rte.ie/quickaxs/209-lyrc-nova-%(year)s-%(month)s-%(day)s.smil"
@@ -36,6 +36,10 @@ while current <= datetime.today():
         os.system("lame --preset fast extreme %s %s" % (wavfile, mp3file))
         # ID3 Tags
         mp3 = MP3(mp3file, ID3=EasyID3)
+        try:
+            mp3.add_tags(ID3=EasyID3)
+        except error:
+            pass
         mp3['title'] = ("Nova - %04d%02d%02d.wav" % (current.year, current.month, current.day))
         mp3['artist'] = "Bernard Clarke"
         mp3['album'] = "Lyric FM - Nova"
