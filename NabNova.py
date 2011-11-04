@@ -7,6 +7,24 @@ import PyRSS2Gen
 PUBLISH_PATH = "/var/www/nova"
 current = datetime.date(2011,1,9)
 
+def make_podcast_xml():
+    # Create Podcast
+    mp3s = sorted([e for e in os.listdir(PUBLISH_PATH) if e.endswith('.mp3')])
+    rss = PyRSS2Gen.RSS2(title = "Nova (LyricFM) via nglynn.com/nova",
+                         link = "http://www.nglynn.com/nova",
+                         description = "Nova (Bernard Clarke on RTE Lyric FM)",
+                         lastBuildDate = datetime.datetime.now(),
+                         items = [PyRSS2Gen.RSSItem(title = mp3,
+                                                    link = "http://www.nglynn.com/nova/"+mp3,
+                                                    description = "Nova (RTE Lyric FM) presented by Bernard Clarke (%s)" % mp3.split('_')[-1].split('.')[0],
+                                                    pubDate = datetime.datetime.fromtimestamp(os.path.getmtime(os.path.join(PUBLISH_PATH,mp3))),
+                                                    enclosure = PyRSS2Gen.Enclosure("http://www.nglynn.com/nova/%s" % mp3, os.path.getsize(os.path.join(PUBLISH_PATH, mp3)),"audio/mpeg"),
+                                                    categories = [PyRSS2Gen.Category("Experimental")],
+                                                    guid = PyRSS2Gen.Guid("http://www.nglynn.com/nova/"+ mp3)) for mp3 in mp3s])
+    rss.write_xml(open(os.path.join(PUBLISH_PATH, "podcast.xml"), "w"))
+    os.system("chmod 755 %s" % os.path.join(PUBLISH_PATH, "podcast.xml"))
+    print "Published Podcast"
+
 while current <= datetime.date.today():
     try:
         # Download smil
@@ -40,9 +58,11 @@ while current <= datetime.date.today():
             mp3.add_tags(ID3=EasyID3)
         except error:
             pass
-        mp3['title'] = ("Nova - %04d%02d%02d.wav" % (current.year, current.month, current.day))
+        mp3['title'] = ("Nova - %04d%02d%02d" % (current.year, current.month, current.day))
         mp3['artist'] = "Bernard Clarke"
         mp3['album'] = "Lyric FM - Nova"
+        mp3.save()
+        mp3 = MP3(mp3file, ID3=ID3)
         mp3.tags.add(APIC(encoding=3, # 3 is for utf-8
                           mime='image/jpeg', # image/jpeg or image/png
                           type=3, # 3 is for the cover image
@@ -59,28 +79,13 @@ while current <= datetime.date.today():
         print "Publishing %s to nglynn.com/nova" % mp3file
         os.system("mv %s %s" % (mp3file, os.path.join(PUBLISH_PATH, mp3file)))
         os.system("chmod 755 %s/*.mp3" % PUBLISH_PATH)
+        make_podcast_xml()
     except:
         traceback.print_exc()
         print "An error occurred processing %s" % mp3file
     finally:
         current = current + datetime.timedelta(7)
 
-# Create Podcast
-mp3s = sorted([e for e in os.listdir(PUBLISH_PATH) if e.endswith('.mp3')])
-rss = PyRSS2Gen.RSS2(title = "Nova (LyricFM) via nglynn.com/nova",
-                     link = "http://www.nglynn.com/nova",
-                     description = "Nova (Bernard Clarke on RTE Lyric FM)",
-                     lastBuildDate = datetime.datetime.now(),
-                     items = [PyRSS2Gen.RSSItem(title = mp3,
-                                                link = "http://www.nglynn.com/nova/"+mp3,
-                                                description = "Nova (RTE Lyric FM) presented by Bernard Clarke (%s)" % mp3.split('_')[-1],
-                                                pubDate = datetime.datetime.fromtimestamp(os.path.getmtime(x)),
-                                                enclosure = PyRSS2Gen.Enclosure("http://www.nglyn.com/nova/%s" % mp3, os.path.getsize(os.path.join(PUBLISH_PATH, mp3)),"audio/mpeg"),
-                                                categories = [PyRSS2Gen.Category("Experimental")],
-                                                guid = PyRSS2Gen.Guid("http://www.nglynn.com/nova/"+ mp3)) for x in mp3s])
-rss.write_xml(open(os.path.join(PUBLISH_PATH, "podcast.xml"), "w"))
-os.system("chmod 755 %s" % os.path.join(PUBLISH_PATH, "podcast.xml"))
-print "Published Podcast"
 
 """
 * To Do* 
