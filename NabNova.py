@@ -25,66 +25,70 @@ def make_podcast_xml():
     os.system("chmod 755 %s" % os.path.join(PUBLISH_PATH, "podcast.xml"))
     print "Published Podcast"
 
-while current <= datetime.date.today():
-    try:
-        # Download smil
-        smiltemplate = "http://dynamic.rte.ie/quickaxs/209-lyrc-nova-%(year)s-%(month)s-%(day)s.smil"
-        smil = smiltemplate % {"year": current.year,
-                               "month": current.month,
-                               "day": current.day}
-        # Extract ra link
-        filename, headers = urllib.urlretrieve(smil)
-        smilfile= open(filename)
-        content = smilfile.read()
-        smilfile.close()
-        os.system("rm " + filename)
-        rtsp = re.findall("rtsp://.*", content)[0].rstrip('"')
-        print "Grabbing NOVA for %s" % repr(current)
-        # Mplayer Command
-        wavfile = "LyricFM_Nova_%04d%02d%02d.wav" % (current.year, current.month, current.day)
-        if os.path.exists(os.path.join(PUBLISH_PATH, wavfile.replace('.wav', '.mp3'))):
-            print "Episode downloaded before, moving on..."
-            continue
-        mplayercmdtemplate = "mplayer %(rtsp)s -ao pcm:file=%(wavfile)s -vc null -vo null"
-        mplayercmd = mplayercmdtemplate % {"wavfile": wavfile, "rtsp": rtsp}
-        print mplayercmd
-        os.system(mplayercmd)
-        # Lame Command
-        mp3file = wavfile.replace('.wav', '.mp3')
-        os.system("lame --preset fast extreme %s %s" % (wavfile, mp3file))
-        # ID3 Tags
-        mp3 = MP3(mp3file, ID3=EasyID3)
+def download_episodes():
+    while current <= datetime.date.today():
         try:
-            mp3.add_tags(ID3=EasyID3)
-        except error:
-            pass
-        mp3['title'] = ("Nova - %04d%02d%02d" % (current.year, current.month, current.day))
-        mp3['artist'] = "Bernard Clarke"
-        mp3['album'] = "Lyric FM - Nova"
-        mp3.save()
-        mp3 = MP3(mp3file, ID3=ID3)
-        mp3.tags.add(APIC(encoding=3, # 3 is for utf-8
-                          mime='image/jpeg', # image/jpeg or image/png
-                          type=3, # 3 is for the cover image
-                          desc=u'Cover',
-                          data=open('nova.jpeg').read()))
-        mp3.save()
+            # Download smil
+            smiltemplate = "http://dynamic.rte.ie/quickaxs/209-lyrc-nova-%(year)s-%(month)s-%(day)s.smil"
+            smil = smiltemplate % {"year": current.year,
+                                   "month": current.month,
+                                   "day": current.day}
+            # Extract ra link
+            filename, headers = urllib.urlretrieve(smil)
+            smilfile= open(filename)
+            content = smilfile.read()
+            smilfile.close()
+            os.system("rm " + filename)
+            rtsp = re.findall("rtsp://.*", content)[0].rstrip('"')
+            print "Grabbing NOVA for %s" % repr(current)
+            # Mplayer Command
+            wavfile = "LyricFM_Nova_%04d%02d%02d.wav" % (current.year, current.month, current.day)
+            if os.path.exists(os.path.join(PUBLISH_PATH, wavfile.replace('.wav', '.mp3'))):
+                print "Episode downloaded before, moving on..."
+                continue
+            mplayercmdtemplate = "mplayer %(rtsp)s -ao pcm:file=%(wavfile)s -vc null -vo null"
+            mplayercmd = mplayercmdtemplate % {"wavfile": wavfile, "rtsp": rtsp}
+            print mplayercmd
+            os.system(mplayercmd)
+            # Lame Command
+            mp3file = wavfile.replace('.wav', '.mp3')
+            os.system("lame --preset fast extreme %s %s" % (wavfile, mp3file))
+            # ID3 Tags
+            mp3 = MP3(mp3file, ID3=EasyID3)
+            try:
+                mp3.add_tags(ID3=EasyID3)
+            except error:
+                pass
+            mp3['title'] = ("Nova - %04d%02d%02d" % (current.year, current.month, current.day))
+            mp3['artist'] = "Bernard Clarke"
+            mp3['album'] = "Lyric FM - Nova"
+            mp3.save()
+            mp3 = MP3(mp3file, ID3=ID3)
+            mp3.tags.add(APIC(encoding=3, # 3 is for utf-8
+                              mime='image/jpeg', # image/jpeg or image/png
+                              type=3, # 3 is for the cover image
+                              desc=u'Cover',
+                              data=open('nova.jpeg').read()))
+            mp3.save()
 
-        # Delete Temp Files
-        if not os.path.exists(mp3file):
-            print "bollocks"
-            sys.exit(-1)
-        os.system("rm " + wavfile)
-        # Publish Command
-        print "Publishing %s to nglynn.com/nova" % mp3file
-        os.system("mv %s %s" % (mp3file, os.path.join(PUBLISH_PATH, mp3file)))
-        os.system("chmod 755 %s/*.mp3" % PUBLISH_PATH)
-        make_podcast_xml()
-    except:
-        traceback.print_exc()
-        print "An error occurred processing %s" % mp3file
-    finally:
-        current = current + datetime.timedelta(7)
+            # Delete Temp Files
+            if not os.path.exists(mp3file):
+                print "bollocks"
+                sys.exit(-1)
+            os.system("rm " + wavfile)
+            # Publish Command
+            print "Publishing %s to nglynn.com/nova" % mp3file
+            os.system("mv %s %s" % (mp3file, os.path.join(PUBLISH_PATH, mp3file)))
+            os.system("chmod 755 %s/*.mp3" % PUBLISH_PATH)
+            make_podcast_xml()
+        except:
+            traceback.print_exc()
+            print "An error occurred processing %s" % mp3file
+        finally:
+            current = current + datetime.timedelta(7)
+
+if __name__=="__main__":
+    sys.exit(download_episodes())
 
 
 """
